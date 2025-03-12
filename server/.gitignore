@@ -3,3 +3,6 @@ node_modules
 
 # API Keys
 .env
+
+# File
+package-lock

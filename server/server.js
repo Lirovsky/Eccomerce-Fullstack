@@ -3,9 +3,10 @@ import cors from "cors";
 import dotenv from "dotenv";
 
 import cookieParser from "cookie-parser";
-// const cookieParser = require("cookie-parser");
 import morgan from "morgan";
 import helmet from "helmet";
+
+import connectDB from "./config/connectDB.js";
 
 dotenv.config();
 
@@ -31,6 +32,9 @@ app.get("/", (req, res) => {
   res.json({ message: "Aoba" });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+// connects to the database and then runs the server
+connectDB().then(() => {
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
 });
