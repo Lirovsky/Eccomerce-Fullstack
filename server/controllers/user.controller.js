@@ -1,6 +1,6 @@
 import UserModel from "../models/user.model.js";
 import bcrypt from "bcryptjs";
-import verifyEmailTempalte from "../utils/verifyEmailTemplate.js";
+import verifyEmailTemplate from "../utils/verifyEmailTemplate.js";
 import sendEmail from "../config/sendEmail.js";
 
 export async function registerUserController(request, response) {
@@ -46,7 +46,7 @@ export async function registerUserController(request, response) {
     const verifyEmail = await sendEmail({
       sendTo: email,
       subject: "Verify your email",
-      html: verifyEmailTempalte({
+      html: verifyEmailTemplate({
         name,
         url: verifyUrl,
       }),
@@ -57,6 +57,35 @@ export async function registerUserController(request, response) {
       error: false,
       success: true,
       data: savedUser,
+    });
+  } catch (error) {
+    response.status(500).json({
+      message: error.message || error,
+      error: true,
+      success: false,
+    });
+  }
+}
+
+export async function verifyEmailController(request, response) {
+  try {
+    // get the user ID
+    const { code } = request.query;
+    const user = await UserModel.findOne({ _id: code });
+
+    if (!user) {
+      response.status(400).json({
+        message: "Code is required",
+        error: true,
+        success: false,
+      });
+    }
+    const updatedUser = await UserModel.findOne({ _id: code }, { verify_email: true });
+
+    return response.status(200).json({
+      message: "User verified successfully",
+      success: true,
+      error: false,
     });
   } catch (error) {
     response.status(500).json({
