@@ -7,6 +7,7 @@ import morgan from "morgan";
 import helmet from "helmet";
 
 import connectDB from "./config/connectDB.js";
+import userRouter from "./routes/user.route.js";
 
 dotenv.config();
 
@@ -31,6 +32,8 @@ const PORT = process.env.PORT || 8080;
 app.get("/", (req, res) => {
   res.json({ message: "Aoba" });
 });
+
+app.use("/api/user", userRouter);
 
 // connects to the database and then runs the server
 connectDB().then(() => {
