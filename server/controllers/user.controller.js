@@ -2,6 +2,8 @@ import UserModel from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 import verifyEmailTemplate from "../utils/verifyEmailTemplate.js";
 import sendEmail from "../config/sendEmail.js";
+import generatedAccessToken from "../utils/generatedAccessToken.js";
+import generatedRefreshToken from "../utils/generatedRefreshToken.js";
 
 export async function registerUserController(request, response) {
   try {
@@ -86,6 +88,75 @@ export async function verifyEmailController(request, response) {
       message: "User verified successfully",
       success: true,
       error: false,
+    });
+  } catch (error) {
+    response.status(500).json({
+      message: error.message || error,
+      error: true,
+      success: false,
+    });
+  }
+}
+
+export async function loginController(request, response) {
+  try {
+    // get the user ID
+    const { email, password } = request.body;
+    if (!email || !password) {
+      response.status(400).json({
+        message: "All fields are required",
+        error: true,
+        success: false,
+      });
+    }
+
+    const user = await UserModel.findOne({ email });
+
+    if (!user) {
+      response.status(400).json({
+        message: "User does not exist",
+        error: true,
+        success: false,
+      });
+    }
+
+    if (user.status !== "Active") {
+      response.status(400).json({
+        message: "User is not verified",
+        error: true,
+        success: false,
+      });
+    }
+
+    // check if password is correct
+    const isPasswordCorrect = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordCorrect) {
+      return response.status(400).json({
+        message: "Invalid credentials",
+        error: true,
+        success: false,
+      });
+    }
+    const accessToken = await generatedAccessToken(user._id);
+    const refreshToken = await generatedRefreshToken(user._id);
+
+    const cookieOptions = {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+    };
+    response.cookie("accessToken", accessToken, cookieOptions);
+    response.cookie("refreshToken", refreshToken, cookieOptions);
+
+    return response.status(200).json({
+      message: "User logged in successfully",
+      success: true,
+      error: false,
+      data: {
+        accessToken,
+        refreshToken,
+      },
     });
   } catch (error) {
     response.status(500).json({
