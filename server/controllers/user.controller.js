@@ -4,6 +4,7 @@ import verifyEmailTemplate from "../utils/verifyEmailTemplate.js";
 import sendEmail from "../config/sendEmail.js";
 import generatedAccessToken from "../utils/generatedAccessToken.js";
 import generatedRefreshToken from "../utils/generatedRefreshToken.js";
+import uploadImageClodinary from "../utils/uploadImageClodinary.js";
 
 export async function registerUserController(request, response) {
   try {
@@ -188,6 +189,35 @@ export async function logoutController(request, response) {
       message: "User logged out successfully",
       success: true,
       error: false,
+    });
+  } catch (error) {
+    response.status(500).json({
+      message: error.message || error,
+      error: true,
+      success: false,
+    });
+  }
+}
+
+export async function uploadAvatar(request, response) {
+  try {
+    const userId = request.userId;
+    const image = request.file;
+
+    const upload = await uploadImageClodinary(image);
+
+    const updateUser = await UserModel.findByIdAndUpdate(userId, {
+      avatar: upload.url,
+    });
+
+    return response.status(200).json({
+      message: "Avatar uploaded successfully",
+      success: true,
+      error: false,
+      data: {
+        _id: userId,
+        avatar: upload.url,
+      },
     });
   } catch (error) {
     response.status(500).json({
