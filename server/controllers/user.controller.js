@@ -166,3 +166,34 @@ export async function loginController(request, response) {
     });
   }
 }
+
+export async function logoutController(request, response) {
+  try {
+    const userid = request.userId;
+
+    const cookieOption = {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+    };
+
+    response.clearCookie("accessToken", cookieOption);
+    response.clearCookie("refreshToken", cookieOption);
+
+    const removeRefreshToken = await UserModel.findByIdAndUpdate(userid, {
+      refresh_token: "",
+    });
+
+    return response.status(200).json({
+      message: "User logged out successfully",
+      success: true,
+      error: false,
+    });
+  } catch (error) {
+    response.status(500).json({
+      message: error.message || error,
+      error: true,
+      success: false,
+    });
+  }
+}
