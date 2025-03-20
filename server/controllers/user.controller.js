@@ -5,6 +5,8 @@ import sendEmail from "../config/sendEmail.js";
 import generatedAccessToken from "../utils/generatedAccessToken.js";
 import generatedRefreshToken from "../utils/generatedRefreshToken.js";
 import uploadImageClodinary from "../utils/uploadImageClodinary.js";
+import generatedOtp from "../utils/generateOtp.js";
+import forgotPasswordTemplate from "../utils/forgotPasswordTemplate.js";
 
 export async function registerUserController(request, response) {
   try {
@@ -255,6 +257,51 @@ export async function updateUserDetails(request, response) {
       success: true,
       error: false,
       data: updateUser,
+    });
+  } catch (error) {
+    response.status(500).json({
+      message: error.message || error,
+      error: true,
+      success: false,
+    });
+  }
+}
+
+export async function forgotPasswordController(request, response) {
+  try {
+    const { email } = request.body;
+
+    const user = await UserModel.findOne({ email });
+
+    if (!user) {
+      return response.status(400).json({
+        message: "User does not exist",
+        error: true,
+        success: false,
+      });
+    }
+
+    const otp = generatedOtp();
+    const expireTime = new Date() + 60 * 60 * 1000;
+
+    const update = await UserModel.findByIdAndUpdate(user._id, {
+      forgot_password_otp: otp,
+      forgot_password_otp_expires: new Date(expireTime).toISOString(),
+    });
+
+    await sendEmail({
+      sendTo: email,
+      subject: "Reset your password",
+      html: forgotPasswordTemplate({
+        name: user.name,
+        otp: otp,
+      }),
+    });
+
+    return response.status(200).json({
+      message: "Reset password link sent to your email",
+      success: true,
+      error: false,
     });
   } catch (error) {
     response.status(500).json({
