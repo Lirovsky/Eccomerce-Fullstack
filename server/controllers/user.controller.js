@@ -7,6 +7,7 @@ import generatedRefreshToken from "../utils/generatedRefreshToken.js";
 import uploadImageClodinary from "../utils/uploadImageClodinary.js";
 import generatedOtp from "../utils/generateOtp.js";
 import forgotPasswordTemplate from "../utils/forgotPasswordTemplate.js";
+import jwt from "jsonwebtoken";
 
 export async function registerUserController(request, response) {
   try {
@@ -411,6 +412,57 @@ export async function resetPassword(request, response) {
       message: "Password updated successfully",
       success: true,
       error: false,
+    });
+  } catch (error) {
+    response.status(500).json({
+      message: error.message || error,
+      error: true,
+      success: false,
+    });
+  }
+}
+
+export async function refreshToken(request, response) {
+  try {
+    const refreshToken =
+      request.cookies.refreshToken || request?.headers?.authorization?.split("")[1];
+
+    if (!refreshToken) {
+      return response.status(400).json({
+        message: "Refresh token not found",
+        error: true,
+        success: false,
+      });
+    }
+
+    const verifyToken = await jwt.verify(refreshToken, process.env.SECRET_KEY_REFRESH_TOKEN);
+
+    if (!verifyToken) {
+      return response.status(400).json({
+        message: "Invalid refresh token",
+        error: true,
+        success: false,
+      });
+    }
+
+    const userId = verifyToken._id;
+    const newAccessToken = await generatedAccessToken(userId);
+
+    const cookieOptions = {
+      httpOnly: true,
+      secure: true,
+      sameSite: "None",
+    };
+
+    response.cookie("accessToken", newAccessToken, cookieOptions);
+
+    return response.status(200).json({
+      message: "Access token refreshed successfully",
+      success: true,
+      error: false,
+      data: {
+        accessToken: newAccessToken,
+      },
     });
   } catch (error) {
     response.status(500).json({
