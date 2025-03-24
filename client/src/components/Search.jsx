@@ -1,12 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { IoSearch } from "react-icons/io5";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { TypeAnimation } from "react-type-animation";
+import useMobile from "../hooks/useMobile";
+import { FaArrowLeft } from "react-icons/fa";
 
 const Search = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isSearchPage, setIsSearchPage] = useState(false);
+  const [isMobile] = useMobile();
+  const params = useLocation();
+  const searchText = params.search.slice(3);
 
   const redirectToSearch = () => {
     navigate("/search");
@@ -19,9 +24,20 @@ const Search = () => {
 
   return (
     <div className="flex h-9 w-full min-w-[300px] items-center overflow-hidden rounded-lg border bg-slate-50 text-neutral-500 group-focus-within:border-amber-300 lg:h-12 lg:min-w-[420px]">
-      <button className="flex h-full items-center justify-center p-3 group-focus-within:text-amber-300">
-        <IoSearch size={22} />
-      </button>
+      <div>
+        {isMobile && isSearchPage ? (
+          <Link
+            to={"/"}
+            className="m-1 flex h-full items-center justify-center p-2"
+          >
+            <FaArrowLeft size={20} />
+          </Link>
+        ) : (
+          <div className="flex h-full items-center justify-center p-3">
+            <IoSearch size={22} />
+          </div>
+        )}
+      </div>
 
       <div className="h-full w-full">
         {!isSearchPage ? (
