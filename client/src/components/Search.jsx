@@ -10,8 +10,8 @@ const Search = () => {
   const location = useLocation();
   const [isSearchPage, setIsSearchPage] = useState(false);
   const [isMobile] = useMobile();
-  const params = useLocation();
-  const searchText = params.search.slice(3);
+  // const params = useLocation();
+  // const searchText = params.search.slice(3);
 
   const redirectToSearch = () => {
     navigate("/search");
